@@ -18,6 +18,7 @@ export default function Home() {
     sendAction,
     sendRelocateCapital,
     quitRoom,
+    isConnected,
   } = useSocket();
 
   // Show lobby if room isn't started or state hasn't loaded 'PLAYING'
@@ -32,6 +33,7 @@ export default function Home() {
         selectFaction={selectFaction}
         startGame={startGame}
         error={error}
+        isConnected={isConnected}
       />
     );
   }

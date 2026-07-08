@@ -10,6 +10,7 @@ export function useSocket() {
   const [error, setError] = useState<string | null>(null);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [roomCode, setRoomCode] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     // Load existing playerId from localStorage
@@ -25,6 +26,7 @@ export function useSocket() {
 
     socket.on('connect', () => {
       console.log('Connected to websocket server at:', SOCKET_URL);
+      setIsConnected(true);
       // If we had a saved room code, try to rejoin
       if (savedRoomCode && savedPlayerId) {
         socket.emit('join_room', {
@@ -33,6 +35,11 @@ export function useSocket() {
           playerId: savedPlayerId,
         });
       }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from websocket server');
+      setIsConnected(false);
     });
 
     socket.on('room_created', ({ gameId, roomCode, playerId: newPlayerId }) => {
@@ -73,6 +80,7 @@ export function useSocket() {
     });
 
     socket.on('connect_error', (err: any) => {
+      setIsConnected(false);
       console.error('Socket connection failure:', err);
     });
 
@@ -125,6 +133,7 @@ export function useSocket() {
     playerId,
     roomCode,
     error,
+    isConnected,
     createRoom,
     joinRoom,
     selectFaction,

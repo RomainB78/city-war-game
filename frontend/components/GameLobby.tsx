@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Faction, GameState } from 'shared';
-import { Shield, Swords, User, Users, Copy, Check } from 'lucide-react';
+import { Shield, Swords, User, Users, Copy, Check, Loader2 } from 'lucide-react';
 
 interface GameLobbyProps {
   gameState: GameState | null;
@@ -11,6 +11,7 @@ interface GameLobbyProps {
   selectFaction: (gameId: string, faction: Faction) => void;
   startGame: (gameId: string) => void;
   error: string | null;
+  isConnected: boolean;
 }
 
 export default function GameLobby({
@@ -21,7 +22,8 @@ export default function GameLobby({
   joinRoom,
   selectFaction,
   startGame,
-  error
+  error,
+  isConnected,
 }: GameLobbyProps) {
   const [name, setName] = useState('');
   const [joinCodeInput, setJoinCodeInput] = useState('');
@@ -93,12 +95,24 @@ export default function GameLobby({
               </div>
             </div>
 
+            {!isConnected && (
+              <div className="bg-amber-950/25 border border-amber-900/30 p-3.5 rounded-lg flex items-center gap-3 animate-pulse">
+                <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
+                <div className="flex-1 text-left">
+                  <span className="text-[10px] font-mono uppercase text-amber-500 block">Connexion au serveur...</span>
+                  <p className="text-[11px] text-stone-400 leading-tight">
+                    L'offre gratuite de Render met le serveur en veille après 15 min d'inactivité. Réveil en cours (30 à 50s)...
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="border-t border-amber-950/20 my-4"></div>
 
             {/* Create Room Button */}
             <button
               onClick={() => name.trim() && createRoom(name.trim())}
-              disabled={!name.trim()}
+              disabled={!name.trim() || !isConnected}
               className="w-full bg-gradient-to-r from-amber-800 to-amber-700 hover:from-amber-700 hover:to-amber-600 disabled:from-stone-900 disabled:to-stone-900 disabled:text-stone-600 disabled:border-stone-800/50 text-stone-900 font-serif font-bold py-3 px-4 rounded-lg border border-amber-600/30 transition-all shadow-lg active:translate-y-[1px]"
             >
               FONDEZ UN NOUVEAU ROYAUME
@@ -122,7 +136,7 @@ export default function GameLobby({
               />
               <button
                 onClick={() => name.trim() && joinCodeInput.trim() && joinRoom(joinCodeInput.trim(), name.trim())}
-                disabled={!name.trim() || joinCodeInput.length < 5}
+                disabled={!name.trim() || joinCodeInput.length < 5 || !isConnected}
                 className="flex-1 bg-stone-900 hover:bg-stone-850 disabled:bg-stone-950 border border-amber-900/30 text-amber-500 disabled:text-stone-700 disabled:border-stone-900 font-serif font-bold py-2.5 px-4 rounded-lg transition-all"
               >
                 REJOINDRE
