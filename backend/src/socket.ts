@@ -42,6 +42,7 @@ export function setupSocketHandlers(io: Server) {
 
         socket.join(roomCode);
         socket.emit('room_created', { gameId, roomCode, playerId: hostPlayer.id });
+        io.to(roomCode).emit('state_updated', initialState);
         console.log(`Room created: ${roomCode} by ${playerName}`);
       } catch (err: any) {
         socket.emit('error', err.message);
