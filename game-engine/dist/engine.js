@@ -22,13 +22,13 @@ function createInitialState(gameId, code, players) {
         const bastions = [];
         for (let i = 0; i < config.bastionCount; i++) {
             bastions.push({
-                id: `${key}_bastion_${i + 1}`,
+                id: `${gameId}_${key}_bastion_${i + 1}`,
                 soldiers: config.soldiersPerBastion,
                 initialSoldiers: config.soldiersPerBastion,
             });
         }
         cities[key] = {
-            id: key,
+            id: `${gameId}_${key}`,
             cityKey: key,
             name: config.name,
             faction: config.faction,
@@ -356,8 +356,8 @@ function resolveCombat(state) {
             if (attackerBastion.soldiers > 0) {
                 attackerCity.bastions = attackerCity.bastions.filter(b => b.id !== attackerBastion.id);
                 defenderCity.bastions.push(attackerBastion);
-                // The newly moved bastion becomes the first bastion and capital of the conquered city
-                defenderCity.capitalId = attackerBastion.id;
+                // Once a capital is destroyed, the city can never recreate a capital. Conquered cities remain capital-less.
+                defenderCity.capitalId = null;
             }
         }
     }

@@ -107,8 +107,9 @@ async function dbCreateGame(state) {
 }
 // Save/update game state in database
 async function dbSaveGame(state) {
+    const dbOps = [];
     // Update Game base info
-    await exports.prisma.game.update({
+    dbOps.push(exports.prisma.game.update({
         where: { id: state.id },
         data: {
             status: state.status,
@@ -117,7 +118,7 @@ async function dbSaveGame(state) {
             winnerFaction: state.winnerFaction,
             combatState: state.combat ? JSON.stringify(state.combat) : null,
         },
-    });
+    }));
     // Load existing cities and bastions from DB for this game to know what to delete
     const dbCities = await exports.prisma.city.findMany({
         where: { gameId: state.id },
@@ -128,48 +129,48 @@ async function dbSaveGame(state) {
         const dbCity = dbCities.find((c) => c.cityKey === city.cityKey);
         if (dbCity) {
             // Update city ownership and capital
-            await exports.prisma.city.update({
+            dbOps.push(exports.prisma.city.update({
                 where: { id: dbCity.id },
                 data: {
                     faction: city.faction,
                     capitalId: city.capitalId,
                 },
-            });
+            }));
             // Update/Delete/Create bastions
             const existingBastions = dbCity.bastions;
             const currentBastionIds = new Set(city.bastions.map(b => b.id));
             // 1. Delete bastions that are no longer in state (destroyed)
             const toDelete = existingBastions.filter((b) => !currentBastionIds.has(b.id));
             if (toDelete.length > 0) {
-                await exports.prisma.bastion.deleteMany({
+                dbOps.push(exports.prisma.bastion.deleteMany({
                     where: { id: { in: toDelete.map((b) => b.id) } },
-                });
+                }));
             }
             // 2. Update existing or insert new bastions
             for (const b of city.bastions) {
                 const exist = existingBastions.find((eb) => eb.id === b.id);
                 if (exist) {
-                    await exports.prisma.bastion.update({
+                    dbOps.push(exports.prisma.bastion.update({
                         where: { id: b.id },
                         data: { soldiers: b.soldiers },
-                    });
+                    }));
                 }
                 else {
-                    await exports.prisma.bastion.create({
+                    dbOps.push(exports.prisma.bastion.create({
                         data: {
                             id: b.id,
                             soldiers: b.soldiers,
                             initialSoldiers: b.initialSoldiers,
                             cityId: dbCity.id,
                         },
-                    });
+                    }));
                 }
             }
         }
     }
     // Sync players (they might change factions in lobby)
     for (const p of state.players) {
-        await exports.prisma.player.upsert({
+        dbOps.push(exports.prisma.player.upsert({
             where: { id: p.id },
             update: {
                 socketId: p.socketId,
@@ -182,14 +183,14 @@ async function dbSaveGame(state) {
                 faction: p.faction,
                 gameId: state.id,
             },
-        });
+        }));
     }
     // Sync actions history (only write new actions)
     const dbActionsCount = await exports.prisma.gameAction.count({ where: { gameId: state.id } });
     if (state.history.length > dbActionsCount) {
         const newActions = state.history.slice(dbActionsCount);
         for (const h of newActions) {
-            await exports.prisma.gameAction.create({
+            dbOps.push(exports.prisma.gameAction.create({
                 data: {
                     id: h.id,
                     type: h.type,
@@ -198,9 +199,11 @@ async function dbSaveGame(state) {
                     timestamp: new Date(h.timestamp),
                     gameId: state.id,
                 },
-            });
+            }));
         }
     }
+    // Wait for all database operations to complete in parallel
+    await Promise.all(dbOps);
 }
 // Find game ID by room code
 async function getGameIdByCode(code) {

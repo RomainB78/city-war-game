@@ -12,102 +12,101 @@ interface InteractiveMapProps {
   selectionMode: 'NONE' | 'EXCHANGE' | 'ATTACK';
 }
 
-// Interlocking SVG Paths for the 19 cities aligning with map.jpg boundaries (viewBox="0 0 1000 800")
 const CITY_PATHS: Record<string, { path: string; labelX: number; labelY: number }> = {
   maisons_laffitte: {
-    path: "M 440,70 L 640,75 L 680,180 L 640,280 L 530,260 L 450,200 Z",
-    labelX: 550,
-    labelY: 170,
+    path: "M 631,158 L 743,161 L 711,223 L 602,306 L 563,269 L 595,181 Z",
+    labelX: 729,
+    labelY: 199,
   },
   sartrouville: {
-    path: "M 640,280 L 680,180 L 830,200 L 880,310 L 780,380 L 670,370 Z",
-    labelX: 755,
-    labelY: 280,
+    path: "M 607,318 L 733,218 L 825,241 L 831,267 L 740,303 L 674,385 Z",
+    labelX: 792,
+    labelY: 287,
   },
   bezons: {
-    path: "M 780,380 L 880,310 L 940,370 L 930,490 L 830,470 Z",
-    labelX: 865,
-    labelY: 410,
+    path: "M 809,317 L 833,283 L 918,351 L 827,435 L 813,398 Z",
+    labelX: 886,
+    labelY: 382,
   },
   houilles: {
-    path: "M 670,370 L 780,380 L 830,470 L 760,520 L 680,470 Z",
-    labelX: 745,
-    labelY: 440,
+    path: "M 766,307 L 807,316 L 823,388 L 732,406 L 701,356 Z",
+    labelX: 726,
+    labelY: 335,
   },
   carrieres: {
-    path: "M 680,470 L 760,520 L 830,470 L 870,550 L 800,640 L 670,600 Z",
-    labelX: 760,
-    labelY: 560,
+    path: "M 693,368 L 727,412 L 801,403 L 808,446 L 720,506 L 668,424 Z",
+    labelX: 761,
+    labelY: 483,
   },
   chatou: {
-    path: "M 590,500 L 680,470 L 670,600 L 580,630 Z",
+    path: "M 590,500 L 668,454 L 708,511 L 663,601 Z",
     labelX: 630,
     labelY: 555,
   },
   montesson: {
-    path: "M 490,360 L 670,370 L 680,470 L 590,500 L 490,490 Z",
-    labelX: 580,
-    labelY: 435,
+    path: "M 604,320 L 646,365 L 674,452 L 629,445 L 520,443 Z",
+    labelX: 633,
+    labelY: 452,
   },
   le_mesnil: {
-    path: "M 450,200 L 530,260 L 640,280 L 670,370 L 490,360 L 450,280 Z",
+    path: "M 563,270 L 600,312 L 574,335 L 499,469 L 476,458 L 537,309 Z",
     labelX: 535,
     labelY: 295,
   },
   saint_germain: {
-    path: "M 230,410 L 410,270 L 450,200 L 450,280 L 490,360 L 490,490 L 440,500 L 350,520 L 270,520 Z",
+    path: "M 245,406 L 324,326 L 317,293 L 422,52 L 654,57 L 441,480 L 260,635 L 233,619 L 309,483 Z",
     labelX: 360,
     labelY: 405,
   },
   le_vesinet: {
-    path: "M 490,490 L 590,500 L 580,590 L 490,590 Z",
+    path: "M 504,481 L 573,457 L 610,579 L 543,610 Z",
     labelX: 540,
     labelY: 545,
   },
   le_pecq: {
-    path: "M 440,500 L 490,490 L 490,590 L 430,600 L 390,570 Z",
+    path: "M 479,463 L 496,473 L 483,562 L 437,609 L 417,595 Z",
     labelX: 450,
     labelY: 550,
   },
   croissy: {
-    path: "M 490,590 L 580,590 L 580,630 L 670,600 L 630,700 L 520,680 Z",
+    path: "M 519,582 L 556,627 L 587,586 L 670,600 L 595,670 L 511,607 Z",
     labelX: 575,
     labelY: 645,
   },
   port_marly: {
-    path: "M 390,570 L 430,600 L 490,590 L 520,680 L 450,710 L 390,660 Z",
-    labelX: 450,
-    labelY: 650,
+    path: "M 450,603 L 467,576 L 488,567 L 512,623 L 493,638 L 469,615 Z",
+    labelX: 464,
+    labelY: 624,
   },
   louveciennes: {
-    path: "M 450,710 L 520,680 L 630,700 L 590,800 L 460,800 Z",
+    path: "M 476,697 L 503,627 L 570,670 L 575,714 L 505,777 Z",
     labelX: 530,
     labelY: 750,
   },
   marly: {
-    path: "M 330,680 L 390,660 L 450,710 L 460,800 L 340,800 Z",
+    path: "M 366,722 L 419,613 L 483,650 L 469,751 L 407,758 Z",
     labelX: 400,
     labelY: 745,
   },
   mareil_marly: {
-    path: "M 280,550 L 350,520 L 390,570 L 390,660 L 330,680 L 300,620 Z",
+    path: "M 333,607 L 356,572 L 422,571 L 418,609 L 379,633 L 343,623 Z",
     labelX: 345,
     labelY: 605,
   },
   etang: {
-    path: "M 220,630 L 300,620 L 330,680 L 340,800 L 230,770 Z",
+    path: "M 230,668 L 281,613 L 380,651 L 339,743 L 277,708 Z",
     labelX: 280,
     labelY: 705,
   },
   chambourcy: {
-    path: "M 150,510 L 230,410 L 270,520 L 280,550 L 220,630 L 160,590 Z",
+    path: "M 198,524 L 230,410 L 285,456 L 292,506 L 232,611 L 112,547 Z",
     labelX: 215,
     labelY: 535,
   },
   aigremont: {
-    path: "M 50,570 L 150,510 L 160,590 L 220,630 L 150,700 L 50,640 Z",
-    labelX: 125,
-    labelY: 615,
+    path: "M 75,520 L 187,433 L 199,484 L 191,524 L 143,524 L 106,546 Z",
+    labelX: 150,
+    labelY: 456,
   },
 };
 
