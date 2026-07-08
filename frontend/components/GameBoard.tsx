@@ -322,22 +322,30 @@ export default function GameBoard({
                 <div className="space-y-3 bg-[#0d0c0b] p-3 rounded-lg border border-stone-850">
                   <span className="text-[10px] font-mono uppercase text-stone-500 block">Cible : {targetCity.name}</span>
                   <div className="space-y-2">
-                    {targetCity.bastions.map((b, idx) => (
-                      <button
-                        key={b.id}
-                        onClick={() => setTargetBastionId(b.id)}
-                        className={`w-full p-2 text-xs rounded border text-left flex justify-between items-center ${
-                          targetBastionId === b.id
-                            ? 'bg-amber-950/20 border-amber-500 text-stone-100'
-                            : 'bg-stone-950/40 border-stone-900 hover:border-amber-900/20 text-stone-400'
-                        }`}
-                      >
-                        <span>Bastion #{idx + 1} ({b.soldiers} soldats)</span>
-                        {targetCity.capitalId === b.id && (
-                          <span className="text-[9px] uppercase font-mono text-amber-500 flex items-center gap-0.5"><Crown size={10} className="fill-amber-500" /> Capitale</span>
-                        )}
-                      </button>
-                    ))}
+                    {targetCity.bastions.map((b, idx) => {
+                      const isCapital = targetCity.capitalId === b.id;
+                      const isDisabled = selectionMode === 'EXCHANGE' && isCapital;
+
+                      return (
+                        <button
+                          key={b.id}
+                          disabled={isDisabled}
+                          onClick={() => setTargetBastionId(b.id)}
+                          className={`w-full p-2 text-xs rounded border text-left flex justify-between items-center ${
+                            targetBastionId === b.id
+                              ? 'bg-amber-950/20 border-amber-500 text-stone-100'
+                              : isDisabled
+                              ? 'opacity-30 cursor-not-allowed border-stone-900 text-stone-600'
+                              : 'bg-stone-950/40 border-stone-900 hover:border-amber-900/20 text-stone-400'
+                          }`}
+                        >
+                          <span>Bastion #{idx + 1} ({b.soldiers} soldats)</span>
+                          {isCapital && (
+                            <span className="text-[9px] uppercase font-mono text-amber-500 flex items-center gap-0.5"><Crown size={10} className="fill-amber-500" /> Capitale</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
