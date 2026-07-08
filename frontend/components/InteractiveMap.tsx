@@ -128,38 +128,38 @@ export default function InteractiveMap({
     const isUncontrolled = city.capitalId === null;
 
     if (selectionMode !== 'NONE' && !isTarget && !isSelected) {
-      return 'fill-[#1e1c1a]/40 stroke-stone-800 pointer-events-none';
+      return 'fill-[#1a120b]/60 stroke-stone-900/40 pointer-events-none transition-all';
     }
 
-    let fill = 'fill-stone-850';
-    let stroke = 'stroke-amber-900/30';
+    let fill = 'fill-stone-500/10';
+    let stroke = 'stroke-stone-500/20';
     let cursor = 'cursor-pointer';
 
     if (isUncontrolled) {
-      fill = isSelected ? 'fill-stone-600' : 'fill-stone-700/80';
-      stroke = isSelected ? 'stroke-amber-400' : 'stroke-stone-600';
+      fill = isSelected ? 'fill-stone-600/45' : 'fill-stone-600/15 hover:fill-stone-600/25';
+      stroke = isSelected ? 'stroke-amber-500' : 'stroke-stone-500/30';
     } else if (city.faction === 'CHATOU') {
       fill = isSelected 
-        ? 'fill-blue-900/60' 
+        ? 'fill-blue-500/40' 
         : isTarget 
-        ? 'fill-blue-950/40 hover:fill-blue-900/40' 
-        : 'fill-blue-950/20 hover:fill-blue-900/10';
-      stroke = isSelected ? 'stroke-blue-400' : isTarget ? 'stroke-blue-600 animate-pulse' : 'stroke-blue-900/40';
+        ? 'fill-blue-500/25 hover:fill-blue-500/35' 
+        : 'fill-blue-500/12 hover:fill-blue-500/22';
+      stroke = isSelected ? 'stroke-blue-400' : isTarget ? 'stroke-blue-500 animate-pulse' : 'stroke-blue-500/30';
     } else if (city.faction === 'VILLE_IMPERIALE') {
       fill = isSelected 
-        ? 'fill-red-900/60' 
+        ? 'fill-red-500/40' 
         : isTarget 
-        ? 'fill-red-950/40 hover:fill-red-900/40' 
-        : 'fill-red-950/20 hover:fill-red-900/10';
-      stroke = isSelected ? 'stroke-red-400' : isTarget ? 'stroke-red-600 animate-pulse' : 'stroke-red-900/40';
+        ? 'fill-red-500/25 hover:fill-red-500/35' 
+        : 'fill-red-500/12 hover:fill-red-500/22';
+      stroke = isSelected ? 'stroke-red-400' : isTarget ? 'stroke-red-500 animate-pulse' : 'stroke-red-500/30';
     }
 
     if (isTarget) {
-      stroke += ' stroke-[3px]';
+      stroke += ' stroke-[3.5px]';
     } else if (isSelected) {
       stroke += ' stroke-[2.5px]';
     } else {
-      stroke += ' stroke-[1px] hover:stroke-[1.5px]';
+      stroke += ' stroke-[1.2px] hover:stroke-[1.8px]';
     }
 
     return `${fill} ${stroke} ${cursor} transition-all duration-300`;
@@ -177,42 +177,10 @@ export default function InteractiveMap({
       {/* SVG Canvas Map */}
       <svg
         viewBox="0 0 1000 800"
-        className="w-full h-full bg-[#0d0c0b] border border-amber-900/20 rounded-xl shadow-2xl relative"
+        className="w-full h-full bg-[#0d0c0b] border border-amber-900/25 rounded-xl shadow-2xl relative"
       >
-        {/* Graticule lines (Map grid) */}
-        <g className="opacity-10 pointer-events-none">
-          <line x1="100" y1="0" x2="100" y2="800" stroke="#d97706" strokeWidth="0.5" />
-          <line x1="300" y1="0" x2="300" y2="800" stroke="#d97706" strokeWidth="0.5" />
-          <line x1="500" y1="0" x2="500" y2="800" stroke="#d97706" strokeWidth="0.5" />
-          <line x1="700" y1="0" x2="700" y2="800" stroke="#d97706" strokeWidth="0.5" />
-          <line x1="900" y1="0" x2="900" y2="800" stroke="#d97706" strokeWidth="0.5" />
-          <line x1="0" y1="100" x2="1000" y2="100" stroke="#d97706" strokeWidth="0.5" />
-          <line x1="0" y1="300" x2="1000" y2="300" stroke="#d97706" strokeWidth="0.5" />
-          <line x1="0" y1="500" x2="1000" y2="500" stroke="#d97706" strokeWidth="0.5" />
-          <line x1="0" y1="700" x2="1000" y2="700" stroke="#d97706" strokeWidth="0.5" />
-        </g>
-
-        {/* Winding Seine River Path (La Seine) */}
-        <path
-          d="M 920,440 C 850,470 780,500 710,545 C 620,600 580,720 460,720 C 360,720 320,620 450,530 C 500,490 560,400 530,320 C 510,270 420,380 340,320 C 260,260 220,100 200,0"
-          className="fill-none stroke-blue-700/30 stroke-[32px] stroke-linecap-round pointer-events-none"
-        />
-        <path
-          d="M 920,440 C 850,470 780,500 710,545 C 620,600 580,720 460,720 C 360,720 320,620 450,530 C 500,490 560,400 530,320 C 510,270 420,380 340,320 C 260,260 220,100 200,0"
-          className="fill-none stroke-blue-500/10 stroke-[40px] stroke-linecap-round filter blur-[4px] pointer-events-none"
-        />
-
-        {/* Compass Rose Decoration */}
-        <g transform="translate(100, 100)" className="opacity-15 pointer-events-none">
-          <circle r="45" fill="none" stroke="#d97706" strokeWidth="1" />
-          <circle r="3" fill="#d97706" />
-          {/* Points */}
-          <path d="M 0,0 L -5,-35 L 0,-42 L 5,-35 Z" fill="#d97706" />
-          <path d="M 0,0 L 5,35 L 0,42 L -5,35 Z" fill="#d97706" />
-          <path d="M 0,0 L -35,5 L -42,0 L -35,-5 Z" fill="#d97706" />
-          <path d="M 0,0 L 35,-5 L 42,0 L 35,5 Z" fill="#d97706" />
-          <text x="-4" y="-46" fill="#d97706" className="text-[10px] font-bold font-mono">N</text>
-        </g>
+        {/* Background Map Image */}
+        <image href="/map.jpg" x="0" y="0" width="1000" height="800" />
 
         {/* City Territories */}
         {Object.entries(CITY_PATHS).map(([key, item]) => {

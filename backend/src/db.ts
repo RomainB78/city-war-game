@@ -110,17 +110,21 @@ export async function dbCreateGame(state: GameState): Promise<void> {
 
 // Save/update game state in database
 export async function dbSaveGame(state: GameState): Promise<void> {
+  const dbOps: Promise<any>[] = [];
+
   // Update Game base info
-  await prisma.game.update({
-    where: { id: state.id },
-    data: {
-      status: state.status,
-      turn: state.turn,
-      activeFaction: state.activeFaction,
-      winnerFaction: state.winnerFaction,
-      combatState: state.combat ? JSON.stringify(state.combat) : null,
-    },
-  });
+  dbOps.push(
+    prisma.game.update({
+      where: { id: state.id },
+      data: {
+        status: state.status,
+        turn: state.turn,
+        activeFaction: state.activeFaction,
+        winnerFaction: state.winnerFaction,
+        combatState: state.combat ? JSON.stringify(state.combat) : null,
+      },
+    })
+  );
 
   // Load existing cities and bastions from DB for this game to know what to delete
   const dbCities = await prisma.city.findMany({
@@ -134,13 +138,15 @@ export async function dbSaveGame(state: GameState): Promise<void> {
 
     if (dbCity) {
       // Update city ownership and capital
-      await prisma.city.update({
-        where: { id: dbCity.id },
-        data: {
-          faction: city.faction,
-          capitalId: city.capitalId,
-        },
-      });
+      dbOps.push(
+        prisma.city.update({
+          where: { id: dbCity.id },
+          data: {
+            faction: city.faction,
+            capitalId: city.capitalId,
+          },
+        })
+      );
 
       // Update/Delete/Create bastions
       const existingBastions = dbCity.bastions;
@@ -149,28 +155,34 @@ export async function dbSaveGame(state: GameState): Promise<void> {
       // 1. Delete bastions that are no longer in state (destroyed)
       const toDelete = existingBastions.filter((b: any) => !currentBastionIds.has(b.id));
       if (toDelete.length > 0) {
-        await prisma.bastion.deleteMany({
-          where: { id: { in: toDelete.map((b: any) => b.id) } },
-        });
+        dbOps.push(
+          prisma.bastion.deleteMany({
+            where: { id: { in: toDelete.map((b: any) => b.id) } },
+          })
+        );
       }
 
       // 2. Update existing or insert new bastions
       for (const b of city.bastions) {
         const exist = existingBastions.find((eb: any) => eb.id === b.id);
         if (exist) {
-          await prisma.bastion.update({
-            where: { id: b.id },
-            data: { soldiers: b.soldiers },
-          });
+          dbOps.push(
+            prisma.bastion.update({
+              where: { id: b.id },
+              data: { soldiers: b.soldiers },
+            })
+          );
         } else {
-          await prisma.bastion.create({
-            data: {
-              id: b.id,
-              soldiers: b.soldiers,
-              initialSoldiers: b.initialSoldiers,
-              cityId: dbCity.id,
-            },
-          });
+          dbOps.push(
+            prisma.bastion.create({
+              data: {
+                id: b.id,
+                soldiers: b.soldiers,
+                initialSoldiers: b.initialSoldiers,
+                cityId: dbCity.id,
+              },
+            })
+          );
         }
       }
     }
@@ -178,20 +190,22 @@ export async function dbSaveGame(state: GameState): Promise<void> {
 
   // Sync players (they might change factions in lobby)
   for (const p of state.players) {
-    await prisma.player.upsert({
-      where: { id: p.id },
-      update: {
-        socketId: p.socketId,
-        faction: p.faction,
-      },
-      create: {
-        id: p.id,
-        name: p.name,
-        socketId: p.socketId,
-        faction: p.faction,
-        gameId: state.id,
-      },
-    });
+    dbOps.push(
+      prisma.player.upsert({
+        where: { id: p.id },
+        update: {
+          socketId: p.socketId,
+          faction: p.faction,
+        },
+        create: {
+          id: p.id,
+          name: p.name,
+          socketId: p.socketId,
+          faction: p.faction,
+          gameId: state.id,
+        },
+      })
+    );
   }
 
   // Sync actions history (only write new actions)
@@ -199,18 +213,23 @@ export async function dbSaveGame(state: GameState): Promise<void> {
   if (state.history.length > dbActionsCount) {
     const newActions = state.history.slice(dbActionsCount);
     for (const h of newActions) {
-      await prisma.gameAction.create({
-        data: {
-          id: h.id,
-          type: h.type,
-          faction: h.faction,
-          details: h.details,
-          timestamp: new Date(h.timestamp),
-          gameId: state.id,
-        },
-      });
+      dbOps.push(
+        prisma.gameAction.create({
+          data: {
+            id: h.id,
+            type: h.type,
+            faction: h.faction,
+            details: h.details,
+            timestamp: new Date(h.timestamp),
+            gameId: state.id,
+          },
+        })
+      );
     }
   }
+
+  // Wait for all database operations to complete in parallel
+  await Promise.all(dbOps);
 }
 
 // Find game ID by room code
