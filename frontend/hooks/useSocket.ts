@@ -24,7 +24,7 @@ export function useSocket() {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('Connected to websocket server');
+      console.log('Connected to websocket server at:', SOCKET_URL);
       // If we had a saved room code, try to rejoin
       if (savedRoomCode && savedPlayerId) {
         socket.emit('join_room', {
