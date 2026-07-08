@@ -29,14 +29,14 @@ export function createInitialState(
     const bastions: Bastion[] = [];
     for (let i = 0; i < config.bastionCount; i++) {
       bastions.push({
-        id: `${key}_bastion_${i + 1}`,
+        id: `${gameId}_${key}_bastion_${i + 1}`,
         soldiers: config.soldiersPerBastion,
         initialSoldiers: config.soldiersPerBastion,
       });
     }
 
     cities[key] = {
-      id: key,
+      id: `${gameId}_${key}`,
       cityKey: key,
       name: config.name,
       faction: config.faction,

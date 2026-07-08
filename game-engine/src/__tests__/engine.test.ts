@@ -204,7 +204,7 @@ describe('Game Engine', () => {
     expect(nextState.cities['port_marly'].capitalId).toBeNull();
     expect(nextState.cities['port_marly'].faction).toBe('CHATOU');
     expect(nextState.cities['port_marly'].bastions.length).toBe(1);
-    expect(nextState.cities['port_marly'].bastions[0].id).toBe('croissy_bastion_2');
+    expect(nextState.cities['port_marly'].bastions[0].id).toBe('g1_croissy_bastion_2');
     expect(nextState.cities['port_marly'].bastions[0].soldiers).toBe(3022);
   });
 });
