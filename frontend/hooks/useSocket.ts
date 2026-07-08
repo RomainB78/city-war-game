@@ -21,7 +21,9 @@ export function useSocket() {
     if (savedRoomCode) setRoomCode(savedRoomCode);
 
     // Initialize socket connection
-    const socket = io(SOCKET_URL);
+    const socket = io(SOCKET_URL, {
+      transports: ['websocket']
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {

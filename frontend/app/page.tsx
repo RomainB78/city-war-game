@@ -50,4 +50,4 @@ export default function Home() {
     />
   );
 }
-// Trigger Vercel rebuild to bundle the updated game-engine package
+// Trigger Vercel rebuild for WebSocket transport client configuration
