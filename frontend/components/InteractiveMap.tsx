@@ -12,102 +12,102 @@ interface InteractiveMapProps {
   selectionMode: 'NONE' | 'EXCHANGE' | 'ATTACK';
 }
 
-// Interlocking SVG Paths for the 19 cities (viewBox="0 0 1000 800")
+// Interlocking SVG Paths for the 19 cities aligning with map.jpg boundaries (viewBox="0 0 1000 800")
 const CITY_PATHS: Record<string, { path: string; labelX: number; labelY: number }> = {
-  aigremont: {
-    path: "M 50,600 L 150,550 L 180,620 L 120,680 L 50,650 Z",
-    labelX: 110,
-    labelY: 620,
-  },
-  chambourcy: {
-    path: "M 150,550 L 250,500 L 290,580 L 220,670 L 180,620 Z",
-    labelX: 210,
-    labelY: 590,
-  },
-  etang: {
-    path: "M 220,670 L 290,580 L 330,640 L 320,740 L 220,730 Z",
-    labelX: 275,
-    labelY: 680,
-  },
-  mareil_marly: {
-    path: "M 290,580 L 350,560 L 400,640 L 350,710 L 330,640 Z",
-    labelX: 345,
-    labelY: 630,
-  },
-  marly: {
-    path: "M 320,740 L 350,710 L 400,750 L 470,760 L 440,820 L 330,810 Z",
-    labelX: 390,
-    labelY: 775,
-  },
-  louveciennes: {
-    path: "M 470,760 L 520,710 L 580,740 L 560,820 L 440,820 Z",
-    labelX: 510,
-    labelY: 775,
-  },
-  port_marly: {
-    path: "M 400,640 L 460,630 L 520,710 L 470,760 L 400,750 Z",
-    labelX: 460,
-    labelY: 700,
-  },
-  le_pecq: {
-    path: "M 450,530 L 500,530 L 520,635 L 460,630 L 400,640 Z",
-    labelX: 470,
-    labelY: 580,
-  },
-  le_vesinet: {
-    path: "M 500,530 L 610,545 L 610,630 L 520,635 Z",
-    labelX: 560,
-    labelY: 580,
-  },
-  croissy: {
-    path: "M 520,635 L 610,630 L 630,690 L 580,740 L 520,710 Z",
-    labelX: 575,
-    labelY: 680,
-  },
-  chatou: {
-    path: "M 610,545 L 710,535 L 685,620 L 630,690 L 610,630 Z",
-    labelX: 660,
-    labelY: 605,
-  },
-  montesson: {
-    path: "M 490,440 L 600,430 L 665,480 L 610,545 L 500,530 Z",
-    labelX: 570,
-    labelY: 485,
-  },
-  le_mesnil: {
-    path: "M 450,330 L 530,320 L 560,400 L 490,440 Z",
-    labelX: 505,
-    labelY: 375,
-  },
-  saint_germain: {
-    path: "M 250,500 L 420,380 L 450,330 L 490,440 L 500,530 L 450,530 L 350,560 L 290,580 Z",
-    labelX: 360,
-    labelY: 460,
-  },
   maisons_laffitte: {
-    path: "M 420,380 L 550,230 L 680,260 L 630,340 L 530,320 L 450,330 Z",
+    path: "M 440,70 L 640,75 L 680,180 L 640,280 L 530,260 L 450,200 Z",
     labelX: 550,
-    labelY: 300,
+    labelY: 170,
   },
   sartrouville: {
-    path: "M 560,400 L 630,340 L 730,320 L 790,405 L 665,480 L 600,430 Z",
-    labelX: 670,
-    labelY: 400,
-  },
-  houilles: {
-    path: "M 665,480 L 790,405 L 830,460 L 775,520 L 710,535 Z",
+    path: "M 640,280 L 680,180 L 830,200 L 880,310 L 780,380 L 670,370 Z",
     labelX: 755,
-    labelY: 475,
+    labelY: 280,
   },
   bezons: {
-    path: "M 790,405 L 900,410 L 890,500 L 830,460 Z",
-    labelX: 855,
+    path: "M 780,380 L 880,310 L 940,370 L 930,490 L 830,470 Z",
+    labelX: 865,
+    labelY: 410,
+  },
+  houilles: {
+    path: "M 670,370 L 780,380 L 830,470 L 760,520 L 680,470 Z",
+    labelX: 745,
     labelY: 440,
   },
   carrieres: {
-    path: "M 710,535 L 775,520 L 830,460 L 890,500 L 840,580 L 685,620 Z",
-    labelX: 780,
+    path: "M 680,470 L 760,520 L 830,470 L 870,550 L 800,640 L 670,600 Z",
+    labelX: 760,
     labelY: 560,
+  },
+  chatou: {
+    path: "M 590,500 L 680,470 L 670,600 L 580,630 Z",
+    labelX: 630,
+    labelY: 555,
+  },
+  montesson: {
+    path: "M 490,360 L 670,370 L 680,470 L 590,500 L 490,490 Z",
+    labelX: 580,
+    labelY: 435,
+  },
+  le_mesnil: {
+    path: "M 450,200 L 530,260 L 640,280 L 670,370 L 490,360 L 450,280 Z",
+    labelX: 535,
+    labelY: 295,
+  },
+  saint_germain: {
+    path: "M 230,410 L 410,270 L 450,200 L 450,280 L 490,360 L 490,490 L 440,500 L 350,520 L 270,520 Z",
+    labelX: 360,
+    labelY: 405,
+  },
+  le_vesinet: {
+    path: "M 490,490 L 590,500 L 580,590 L 490,590 Z",
+    labelX: 540,
+    labelY: 545,
+  },
+  le_pecq: {
+    path: "M 440,500 L 490,490 L 490,590 L 430,600 L 390,570 Z",
+    labelX: 450,
+    labelY: 550,
+  },
+  croissy: {
+    path: "M 490,590 L 580,590 L 580,630 L 670,600 L 630,700 L 520,680 Z",
+    labelX: 575,
+    labelY: 645,
+  },
+  port_marly: {
+    path: "M 390,570 L 430,600 L 490,590 L 520,680 L 450,710 L 390,660 Z",
+    labelX: 450,
+    labelY: 650,
+  },
+  louveciennes: {
+    path: "M 450,710 L 520,680 L 630,700 L 590,800 L 460,800 Z",
+    labelX: 530,
+    labelY: 750,
+  },
+  marly: {
+    path: "M 330,680 L 390,660 L 450,710 L 460,800 L 340,800 Z",
+    labelX: 400,
+    labelY: 745,
+  },
+  mareil_marly: {
+    path: "M 280,550 L 350,520 L 390,570 L 390,660 L 330,680 L 300,620 Z",
+    labelX: 345,
+    labelY: 605,
+  },
+  etang: {
+    path: "M 220,630 L 300,620 L 330,680 L 340,800 L 230,770 Z",
+    labelX: 280,
+    labelY: 705,
+  },
+  chambourcy: {
+    path: "M 150,510 L 230,410 L 270,520 L 280,550 L 220,630 L 160,590 Z",
+    labelX: 215,
+    labelY: 535,
+  },
+  aigremont: {
+    path: "M 50,570 L 150,510 L 160,590 L 220,630 L 150,700 L 50,640 Z",
+    labelX: 125,
+    labelY: 615,
   },
 };
 
@@ -121,48 +121,56 @@ export default function InteractiveMap({
   selectionMode
 }: InteractiveMapProps) {
 
-  // Return background color based on Faction Owner
-  const getCityColorClass = (cityKey: string, city: City) => {
+  // Explicit SVG styling to avoid Tailwind fill opacity bugs that render solid black
+  const getPathStyle = (cityKey: string, city: City): React.CSSProperties => {
     const isSelected = selectedCityId === cityKey;
     const isTarget = validTargets.includes(cityKey);
     const isUncontrolled = city.capitalId === null;
 
     if (selectionMode !== 'NONE' && !isTarget && !isSelected) {
-      return 'fill-[#1a120b]/60 stroke-stone-900/40 pointer-events-none transition-all';
+      return {
+        fill: '#000000',
+        fillOpacity: 0.45,
+        stroke: '#44403c',
+        strokeWidth: 1,
+        pointerEvents: 'none',
+        transition: 'all 0.25s ease',
+      };
     }
 
-    let fill = 'fill-stone-500/10';
-    let stroke = 'stroke-stone-500/20';
-    let cursor = 'cursor-pointer';
+    let fillColor = '#a8a29e';
+    let strokeColor = '#78716c';
+    let fillOpacity = 0.06;
+    let strokeWidth = 1.3;
 
     if (isUncontrolled) {
-      fill = isSelected ? 'fill-stone-600/45' : 'fill-stone-600/15 hover:fill-stone-600/25';
-      stroke = isSelected ? 'stroke-amber-500' : 'stroke-stone-500/30';
+      fillColor = '#78716c';
+      strokeColor = isSelected ? '#f59e0b' : '#a8a29e';
+      fillOpacity = isSelected ? 0.35 : 0.12;
     } else if (city.faction === 'CHATOU') {
-      fill = isSelected 
-        ? 'fill-blue-500/40' 
-        : isTarget 
-        ? 'fill-blue-500/25 hover:fill-blue-500/35' 
-        : 'fill-blue-500/12 hover:fill-blue-500/22';
-      stroke = isSelected ? 'stroke-blue-400' : isTarget ? 'stroke-blue-500 animate-pulse' : 'stroke-blue-500/30';
+      fillColor = '#3b82f6';
+      strokeColor = isSelected ? '#60a5fa' : isTarget ? '#3b82f6' : 'rgba(59, 130, 246, 0.45)';
+      fillOpacity = isSelected ? 0.38 : isTarget ? 0.28 : 0.08;
     } else if (city.faction === 'VILLE_IMPERIALE') {
-      fill = isSelected 
-        ? 'fill-red-500/40' 
-        : isTarget 
-        ? 'fill-red-500/25 hover:fill-red-500/35' 
-        : 'fill-red-500/12 hover:fill-red-500/22';
-      stroke = isSelected ? 'stroke-red-400' : isTarget ? 'stroke-red-500 animate-pulse' : 'stroke-red-500/30';
+      fillColor = '#ef4444';
+      strokeColor = isSelected ? '#f87171' : isTarget ? '#ef4444' : 'rgba(239, 68, 68, 0.45)';
+      fillOpacity = isSelected ? 0.38 : isTarget ? 0.28 : 0.08;
     }
 
     if (isTarget) {
-      stroke += ' stroke-[3.5px]';
+      strokeWidth = 3.5;
     } else if (isSelected) {
-      stroke += ' stroke-[2.5px]';
-    } else {
-      stroke += ' stroke-[1.2px] hover:stroke-[1.8px]';
+      strokeWidth = 2.5;
     }
 
-    return `${fill} ${stroke} ${cursor} transition-all duration-300`;
+    return {
+      fill: fillColor,
+      fillOpacity,
+      stroke: strokeColor,
+      strokeWidth,
+      cursor: 'pointer',
+      transition: 'all 0.25s ease',
+    };
   };
 
   // Helper to count total soldiers in a city
@@ -191,7 +199,7 @@ export default function InteractiveMap({
             <g key={key} onClick={() => onSelectCity(key)}>
               <path
                 d={item.path}
-                className={getCityColorClass(key, city)}
+                style={getPathStyle(key, city)}
               />
             </g>
           );
