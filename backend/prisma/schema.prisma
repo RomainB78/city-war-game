@@ -1,0 +1,61 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Game {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  status        String       // 'LOBBY', 'PLAYING', 'FINISHED'
+  turn          Int          @default(1)
+  activeFaction String       // 'CHATOU', 'VILLE_IMPERIALE'
+  winnerFaction String?
+  combatState   String?      // Nullable JSON string for transient combat state
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  players       Player[]
+  cities        City[]
+  history       GameAction[]
+}
+
+model Player {
+  id        String   @id @default(uuid())
+  socketId  String?
+  name      String
+  faction   String?  // 'CHATOU', 'VILLE_IMPERIALE'
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+model City {
+  id          String    @id @default(uuid())
+  cityKey     String    // e.g. 'chatou', 'le_pecq'
+  name        String
+  faction     String    // Owner Faction
+  gameId      String
+  game        Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  bastions    Bastion[]
+  capitalId   String?   // points to the Bastion holding the capital
+}
+
+model Bastion {
+  id              String  @id @default(uuid())
+  soldiers        Int
+  initialSoldiers Int
+  cityId          String
+  city            City    @relation(fields: [cityId], references: [id], onDelete: Cascade)
+}
+
+model GameAction {
+  id        String   @id @default(uuid())
+  type      String   // 'EXCHANGE', 'ATTACK', 'CAPITAL_RELOCATION'
+  faction   String
+  details   String   // Text description or JSON of parameters
+  timestamp DateTime @default(now())
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
