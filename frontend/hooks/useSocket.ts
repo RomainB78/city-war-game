@@ -67,6 +67,15 @@ export function useSocket() {
       setRoomCode(null);
     });
 
+    socket.on('error', (msg: any) => {
+      setError(String(msg));
+      console.error('Socket backend error:', msg);
+    });
+
+    socket.on('connect_error', (err: any) => {
+      console.error('Socket connection failure:', err);
+    });
+
     return () => {
       socket.disconnect();
     };
