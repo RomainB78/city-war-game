@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Éditeur de Territoires - Chroniques de la Boucle</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0a09;
+    }
+    .font-serif {
+      font-family: 'Cinzel', serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #141210;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #78350f;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="text-stone-300 min-h-screen flex flex-col overflow-hidden">
+  <!-- Header -->
+  <header class="bg-[#141210] border-b border-amber-900/30 px-6 py-4 flex items-center justify-between z-10 shrink-0">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🗺️</span>
+      <div>
+        <h1 class="text-xl font-bold text-amber-500 font-serif tracking-wide">ÉDITEUR DE TERRITOIRES</h1>
+        <p class="text-xs text-stone-500 font-mono">Ajustez les polygones de la carte interactive en temps réel</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="exportJSON()" class="bg-amber-700 hover:bg-amber-600 text-stone-100 font-bold px-4 py-2 rounded border border-amber-500/30 transition-all font-serif text-sm">
+        💾 Copier la config React
+      </button>
+    </div>
+  </header>
+  <!-- Main Content -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- Sidebar - List of Cities -->
+    <aside class="w-80 bg-[#141210]/90 border-r border-amber-900/20 flex flex-col overflow-hidden shrink-0">
+      <div class="p-4 bg-[#1b1916] border-b border-amber-900/10">
+        <h2 class="text-xs uppercase font-mono text-stone-400 tracking-wider">Sélectionnez une ville à modifier</h2>
+      </div>
+      <div class="flex-1 overflow-y-auto p-2 space-y-1" id="city-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </aside>
+    <!-- Canvas Area -->
+    <main class="flex-1 bg-[#090807] flex items-center justify-center p-6 overflow-auto relative">
+      <div class="relative bg-black rounded-lg shadow-2xl border border-amber-900/20 overflow-hidden">
+        <!-- SVG Interactive Editor -->
+        <svg
+          id="map-svg"
+          viewBox="0 0 1000 800"
+          width="1000"
+          height="800"
+          class="select-none cursor-default"
+          onclick="handleMapClick(event)"
+          onmousemove="handleMouseMove(event)"
+          onmouseup="handleMouseUp()"
+          onmouseleave="handleMouseUp()"
+        >
+          <!-- Background Map Image -->
+          <image href="../../frontend/public/map.jpg" x="0" y="0" width="1000" height="800" />
+          <!-- Rendered Polygons -->
+          <g id="polygons-group"></g>
+          <!-- Rendered Handles for Selected Polygon -->
+          <g id="handles-group"></g>
+        </svg>
+      </div>
+    </main>
+    <!-- Sidebar - Config Code -->
+    <aside class="w-96 bg-[#141210]/95 border-l border-amber-900/25 p-4 flex flex-col overflow-hidden shrink-0">
+      <div class="mb-4">
+        <h2 class="text-sm font-bold font-serif text-amber-500 mb-1">CONFIGURATION ACTUELLE</h2>
+        <p class="text-[11px] text-stone-500 font-mono">Modifiez les points sur la carte, le code ci-dessous s'actualise tout seul.</p>
+      </div>
+      
+      <!-- Live Coordinates Info -->
+      <div class="bg-stone-900/50 p-3 rounded border border-stone-800 mb-4 font-mono text-xs space-y-2">
+        <div>
+          <span class="text-stone-500">Ville sélectionnée :</span>
+          <span id="selected-city-name" class="text-amber-400 font-bold ml-1">-</span>
+        </div>
+        <div class="flex gap-4">
+          <div>
+            <span class="text-stone-500">Label X :</span>
+            <input type="number" id="label-x-input" class="w-16 bg-stone-950 border border-stone-800 text-stone-300 rounded px-1 ml-1 text-center" oninput="updateLabelX(this.value)">
+          </div>
+          <div>
+            <span class="text-stone-500">Label Y :</span>
+            <input type="number" id="label-y-input" class="w-16 bg-stone-950 border border-stone-800 text-stone-300 rounded px-1 ml-1 text-center" oninput="updateLabelY(this.value)">
+          </div>
+        </div>
+        <div class="text-[10px] text-amber-600/80 italic mt-1">
+          💡 Double-cliquez n'importe où sur la carte pour déplacer le label de la ville active !
+        </div>
+      </div>
+      <div class="flex items-center gap-2 mb-3">
+        <button id="add-point-toggle" onclick="toggleAddPointMode()" class="bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold px-3 py-2 rounded border border-stone-700 transition-all text-xs font-serif">
+          ➕ Ajouter un point
+        </button>
+      </div>
+      <p id="add-point-hint" class="text-[10px] text-stone-500 font-mono mb-4">
+        Cliquez sur la carte pour insérer un point sur la frontière active.
+      </p>
+      <div class="flex-1 flex flex-col min-h-0">
+        <label class="text-xs uppercase font-mono text-stone-400 mb-2 block">Code source à copier :</label>
+        <textarea
+          id="config-output"
+          readonly
+          class="flex-1 w-full bg-stone-950 text-stone-300 border border-stone-850 rounded p-3 font-mono text-[10px] leading-relaxed resize-none focus:outline-none focus:border-amber-700"
+          onclick="this.select()"
+        ></textarea>
+      </div>
+    </aside>
+  </div>
+  <script>
+    // Initial data from React code
+    const initialPaths = {
+      maisons_laffitte: {
+        name: "Maisons-Laffitte",
+        path: "M 440,70 L 640,75 L 680,180 L 640,280 L 530,260 L 450,200 Z",
+        labelX: 550,
+        labelY: 170,
+      },
+      sartrouville: {
+        name: "Sartrouville",
+        path: "M 640,280 L 680,180 L 830,200 L 880,310 L 780,380 L 670,370 Z",
+        labelX: 755,
+        labelY: 280,
+      },
+      bezons: {
+        name: "Bezons",
+        path: "M 780,380 L 880,310 L 940,370 L 930,490 L 830,470 Z",
+        labelX: 865,
+        labelY: 410,
+      },
+      houilles: {
+        name: "Houilles",
+        path: "M 670,370 L 780,380 L 830,470 L 760,520 L 680,470 Z",
+        labelX: 745,
+        labelY: 440,
+      },
+      carrieres: {
+        name: "Carrières-sur-Seine",
+        path: "M 680,470 L 760,520 L 830,470 L 870,550 L 800,640 L 670,600 Z",
+        labelX: 760,
+        labelY: 560,
+      },
+      chatou: {
+        name: "Chatou",
+        path: "M 590,500 L 680,470 L 670,600 L 580,630 Z",
+        labelX: 630,
+        labelY: 555,
+      },
+      montesson: {
+        name: "Montesson",
+        path: "M 490,360 L 670,370 L 680,470 L 590,500 L 490,490 Z",
+        labelX: 580,
+        labelY: 435,
+      },
+      le_mesnil: {
+        name: "Le Mesnil-le-Roi",
+        path: "M 450,200 L 530,260 L 640,280 L 670,370 L 490,360 L 450,280 Z",
+        labelX: 535,
+        labelY: 295,
+      },
+      saint_germain: {
+        name: "Saint-Germain-en-Laye",
+        path: "M 230,410 L 410,270 L 450,200 L 450,280 L 490,360 L 490,490 L 440,500 L 350,520 L 270,520 Z",
+        labelX: 360,
+        labelY: 405,
+      },
+      le_vesinet: {
+        name: "Le Vésinet",
+        path: "M 490,490 L 590,500 L 580,590 L 490,590 Z",
+        labelX: 540,
+        labelY: 545,
+      },
+      le_pecq: {
+        name: "Le Pecq",
+        path: "M 440,500 L 490,490 L 490,590 L 430,600 L 390,570 Z",
+        labelX: 450,
+        labelY: 550,
+      },
+      croissy: {
+        name: "Croissy-sur-Seine",
+        path: "M 490,590 L 580,590 L 580,630 L 670,600 L 630,700 L 520,680 Z",
+        labelX: 575,
+        labelY: 645,
+      },
+      port_marly: {
+        name: "Port-Marly",
+        path: "M 390,570 L 430,600 L 490,590 L 520,680 L 450,710 L 390,660 Z",
+        labelX: 450,
+        labelY: 650,
+      },
+      louveciennes: {
+        name: "Louveciennes",
+        path: "M 450,710 L 520,680 L 630,700 L 590,800 L 460,800 Z",
+        labelX: 530,
+        labelY: 750,
+      },
+      marly: {
+        name: "Marly-Le-Roi",
+        path: "M 330,680 L 390,660 L 450,710 L 460,800 L 340,800 Z",
+        labelX: 400,
+        labelY: 745,
+      },
+      mareil_marly: {
+        name: "Mareil-Marly",
+        path: "M 280,550 L 350,520 L 390,570 L 390,660 L 330,680 L 300,620 Z",
+        labelX: 345,
+        labelY: 605,
+      },
+      etang: {
+        name: "L'Étang-la-Ville",
+        path: "M 220,630 L 300,620 L 330,680 L 340,800 L 230,770 Z",
+        labelX: 280,
+        labelY: 705,
+      },
+      chambourcy: {
+        name: "Chambourcy",
+        path: "M 150,510 L 230,410 L 270,520 L 280,550 L 220,630 L 160,590 Z",
+        labelX: 215,
+        labelY: 535,
+      },
+      aigremont: {
+        name: "Aigremont",
+        path: "M 50,570 L 150,510 L 160,590 L 220,630 L 150,700 L 50,640 Z",
+        labelX: 125,
+        labelY: 615,
+      },
+    };
+    let activeCityKey = "saint_germain";
+    let draggingPointIndex = null;
+    let addPointMode = false;
+    let svgElement = null;
+
+    function toggleAddPointMode() {
+      addPointMode = !addPointMode;
+      setAddPointModeUI();
+    }
+
+    function setAddPointModeUI() {
+      const button = document.getElementById('add-point-toggle');
+      const hint = document.getElementById('add-point-hint');
+      if (!button || !hint) return;
+
+      if (addPointMode) {
+        button.className = 'bg-amber-700 hover:bg-amber-600 text-stone-100 font-semibold px-3 py-2 rounded border border-amber-500/40 transition-all text-xs font-serif';
+        hint.textContent = 'Mode ajout actif : cliquez sur la carte pour insérer un point sur la frontière.';
+        hint.className = 'text-[10px] text-amber-400 font-mono mb-4';
+      } else {
+        button.className = 'bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold px-3 py-2 rounded border border-stone-700 transition-all text-xs font-serif';
+        hint.textContent = 'Cliquez sur la carte pour insérer un point sur la frontière active.';
+        hint.className = 'text-[10px] text-stone-500 font-mono mb-4';
+      }
+    }
+
+    function handleMapClick(e) {
+      if (!addPointMode) return;
+      const coords = getSVGCoordinates(e);
+      insertPointAtCoords(coords.x, coords.y);
+    }
+
+    function insertPointAtCoords(x, y) {
+      const points = parsePath(initialPaths[activeCityKey].path);
+      if (points.length < 3) return;
+
+      let closestIndex = 0;
+      let bestDistance = Infinity;
+
+      for (let i = 0; i < points.length; i++) {
+        const a = points[i];
+        const b = points[(i + 1) % points.length];
+        const distance = distancePointToSegment(x, y, a.x, a.y, b.x, b.y);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          closestIndex = i;
+        }
+      }
+
+      const insertIndex = (closestIndex + 1) % points.length;
+      points.splice(insertIndex, 0, { x: Math.round(x), y: Math.round(y) });
+
+      initialPaths[activeCityKey].path = buildPath(points);
+      renderAll();
+      updateOutputCode();
+    }
+
+    function distancePointToSegment(px, py, ax, ay, bx, by) {
+      const dx = bx - ax;
+      const dy = by - ay;
+      if (dx === 0 && dy === 0) return Math.hypot(px - ax, py - ay);
+
+      const t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
+      const clampedT = Math.max(0, Math.min(1, t));
+      const projX = ax + clampedT * dx;
+      const projY = ay + clampedT * dy;
+      return Math.hypot(px - projX, py - projY);
+    }
+    // Parse SVG path to array of {x, y}
+    function parsePath(pathStr) {
+      // Extract numbers
+      const coords = pathStr.match(/-?\d+/g);
+      if (!coords) return [];
+      const points = [];
+      for (let i = 0; i < coords.length; i += 2) {
+        if (coords[i] !== undefined && coords[i+1] !== undefined) {
+          points.push({ x: parseInt(coords[i]), y: parseInt(coords[i+1]) });
+        }
+      }
+      return points;
+    }
+    // Build SVG path from array of {x, y}
+    function buildPath(points) {
+      if (points.length === 0) return "";
+      let d = `M ${points[0].x},${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        d += ` L ${points[i].x},${points[i].y}`;
+      }
+      d += " Z";
+      return d;
+    }
+    // Initialize UI
+    function init() {
+      svgElement = document.getElementById('map-svg');
+      setAddPointModeUI();
+      renderCityList();
+      selectCity(activeCityKey);
+      renderAll();
+      // Double click listener to position city labels quickly
+      svgElement.addEventListener('dblclick', function(e) {
+        const pt = getSVGCoordinates(e);
+        initialPaths[activeCityKey].labelX = Math.round(pt.x);
+        initialPaths[activeCityKey].labelY = Math.round(pt.y);
+        
+        document.getElementById('label-x-input').value = initialPaths[activeCityKey].labelX;
+        document.getElementById('label-y-input').value = initialPaths[activeCityKey].labelY;
+        
+        renderAll();
+        updateOutputCode();
+      });
+    }
+    // Render left sidebar
+    function renderCityList() {
+      const list = document.getElementById('city-list');
+      list.innerHTML = "";
+      Object.keys(initialPaths).forEach(key => {
+        const city = initialPaths[key];
+        const btn = document.createElement('button');
+        btn.id = `btn-${key}`;
+        btn.className = `w-full text-left px-3 py-2 rounded text-xs font-serif flex items-center justify-between transition-all ${
+          key === activeCityKey 
+            ? 'bg-amber-950/40 text-amber-500 border border-amber-900/30' 
+            : 'hover:bg-stone-900 text-stone-400'
+        }`;
+        btn.innerHTML = `
+          <span>${city.name}</span>
+          <span class="font-mono text-[9px] text-stone-600">${key}</span>
+        `;
+        btn.onclick = () => selectCity(key);
+        list.appendChild(btn);
+      });
+    }
+    function selectCity(key) {
+      document.getElementById(`btn-${activeCityKey}`)?.classList.remove('bg-amber-950/40', 'text-amber-500', 'border', 'border-amber-900/30');
+      document.getElementById(`btn-${activeCityKey}`)?.classList.add('hover:bg-stone-900', 'text-stone-400');
+      activeCityKey = key;
+      
+      document.getElementById(`btn-${activeCityKey}`)?.classList.remove('hover:bg-stone-900', 'text-stone-400');
+      document.getElementById(`btn-${activeCityKey}`)?.classList.add('bg-amber-950/40', 'text-amber-500', 'border', 'border-amber-900/30');
+      document.getElementById('selected-city-name').innerText = initialPaths[key].name;
+      document.getElementById('label-x-input').value = initialPaths[key].labelX;
+      document.getElementById('label-y-input').value = initialPaths[key].labelY;
+      renderAll();
+      updateOutputCode();
+    }
+    function updateLabelX(val) {
+      initialPaths[activeCityKey].labelX = parseInt(val) || 0;
+      renderAll();
+      updateOutputCode();
+    }
+    function updateLabelY(val) {
+      initialPaths[activeCityKey].labelY = parseInt(val) || 0;
+      renderAll();
+      updateOutputCode();
+    }
+    // Transform mouse event client coordinates to SVG coordinates
+    function getSVGCoordinates(e) {
+      const rect = svgElement.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (1000 / rect.width);
+      const y = (e.clientY - rect.top) * (800 / rect.height);
+      return { x, y };
+    }
+    // Handle Drag start
+    function handleMouseDown(pointIndex) {
+      draggingPointIndex = pointIndex;
+    }
+    // Handle dragging
+    function handleMouseMove(e) {
+      if (draggingPointIndex === null) return;
+      
+      const coords = getSVGCoordinates(e);
+      const points = parsePath(initialPaths[activeCityKey].path);
+      
+      if (points[draggingPointIndex]) {
+        points[draggingPointIndex].x = Math.round(coords.x);
+        points[draggingPointIndex].y = Math.round(coords.y);
+        
+        initialPaths[activeCityKey].path = buildPath(points);
+        renderAll();
+        updateOutputCode();
+      }
+    }
+    // Handle drag end
+    function handleMouseUp() {
+      draggingPointIndex = null;
+    }
+    // Render all elements on canvas
+    function renderAll() {
+      const polysGroup = document.getElementById('polygons-group');
+      const handlesGroup = document.getElementById('handles-group');
+      polysGroup.innerHTML = "";
+      handlesGroup.innerHTML = "";
+      Object.keys(initialPaths).forEach(key => {
+        const city = initialPaths[key];
+        const isSelected = key === activeCityKey;
+        // Create Path Element
+        const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathEl.setAttribute("d", city.path);
+        
+        // Dynamic styling
+        pathEl.setAttribute("fill", isSelected ? "#3b82f6" : "#f59e0b");
+        pathEl.setAttribute("fill-opacity", isSelected ? "0.22" : "0.04");
+        pathEl.setAttribute("stroke", isSelected ? "#fbbf24" : "rgba(251, 191, 36, 0.2)");
+        pathEl.setAttribute("stroke-width", isSelected ? "2.5" : "1");
+        pathEl.setAttribute("class", "transition-all duration-150");
+        pathEl.style.cursor = "pointer";
+        pathEl.onclick = () => {
+          if (addPointMode) return;
+          selectCity(key);
+        };
+        polysGroup.appendChild(pathEl);
+        // Label circle overlay for text centering
+        const lblCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        lblCircle.setAttribute("cx", city.labelX);
+        lblCircle.setAttribute("cy", city.labelY);
+        lblCircle.setAttribute("r", isSelected ? "5" : "3");
+        lblCircle.setAttribute("fill", isSelected ? "#ef4444" : "#fbbf24");
+        lblCircle.setAttribute("fill-opacity", "0.85");
+        polysGroup.appendChild(lblCircle);
+        // Label text overlay
+        const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        textEl.setAttribute("x", city.labelX);
+        textEl.setAttribute("y", city.labelY - 10);
+        textEl.setAttribute("text-anchor", "middle");
+        textEl.setAttribute("fill", isSelected ? "#ffffff" : "#a8a29e");
+        textEl.setAttribute("font-size", isSelected ? "11px" : "9px");
+        textEl.setAttribute("font-family", "Cinzel, serif");
+        textEl.setAttribute("font-weight", "bold");
+        textEl.textContent = city.name;
+        polysGroup.appendChild(textEl);
+      });
+      // Render draggable nodes for the active city
+      const activePoints = parsePath(initialPaths[activeCityKey].path);
+      activePoints.forEach((pt, index) => {
+        const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        handle.setAttribute("cx", pt.x);
+        handle.setAttribute("cy", pt.y);
+        handle.setAttribute("r", "7");
+        handle.setAttribute("fill", "#ef4444");
+        handle.setAttribute("stroke", "#ffffff");
+        handle.setAttribute("stroke-width", "2");
+        handle.style.cursor = "move";
+        handle.onmousedown = (e) => {
+          e.stopPropagation();
+          handleMouseDown(index);
+        };
+        handlesGroup.appendChild(handle);
+      });
+    }
+    // Output formatting to easily paste into InteractiveMap.tsx
+    function updateOutputCode() {
+      const output = document.getElementById('config-output');
+      
+      let jsCode = "const CITY_PATHS: Record<string, { path: string; labelX: number; labelY: number }> = {\n";
+      Object.keys(initialPaths).forEach(key => {
+        const city = initialPaths[key];
+        jsCode += `  ${key}: {\n`;
+        jsCode += `    path: "${city.path}",\n`;
+        jsCode += `    labelX: ${city.labelX},\n`;
+        jsCode += `    labelY: ${city.labelY},\n`;
+        jsCode += `  },\n`;
+      });
+      jsCode += "};";
+      
+      output.value = jsCode;
+    }
+    function exportJSON() {
+      const textarea = document.getElementById('config-output');
+      textarea.select();
+      document.execCommand('copy');
+      alert("Configuration copiée dans le presse-papiers ! Vous pouvez la coller directement dans InteractiveMap.tsx.");
+    }
+    window.onload = init;
+  </script>
+</body>
+</html>
