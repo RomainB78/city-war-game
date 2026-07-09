@@ -29,12 +29,14 @@ export function useSocket() {
     socket.on('connect', () => {
       console.log('Connected to websocket server at:', SOCKET_URL);
       setIsConnected(true);
-      // If we had a saved room code, try to rejoin
-      if (savedRoomCode && savedPlayerId) {
+      const latestRoomCode = localStorage.getItem('boucle_room_code');
+      const latestPlayerId = localStorage.getItem('boucle_player_id');
+      const latestPlayerName = localStorage.getItem('boucle_player_name') || 'Joueur';
+      if (latestRoomCode && latestPlayerId) {
         socket.emit('join_room', {
-          roomCode: savedRoomCode,
-          playerName: localStorage.getItem('boucle_player_name') || 'Joueur',
-          playerId: savedPlayerId,
+          roomCode: latestRoomCode,
+          playerName: latestPlayerName,
+          playerId: latestPlayerId,
         });
       }
     });
@@ -98,11 +100,17 @@ export function useSocket() {
 
   const joinRoom = (roomCode: string, playerName: string) => {
     localStorage.setItem('boucle_player_name', playerName);
-    socketRef.current?.emit('join_room', { roomCode, playerName });
+    const existingPlayerId = localStorage.getItem('boucle_player_id');
+    socketRef.current?.emit('join_room', {
+      roomCode,
+      playerName,
+      playerId: existingPlayerId || undefined,
+    });
   };
 
   const selectFaction = (gameId: string, faction: 'CHATOU' | 'VILLE_IMPERIALE') => {
-    socketRef.current?.emit('select_faction', { gameId, faction });
+    const currentId = localStorage.getItem('boucle_player_id') || playerId || undefined;
+    socketRef.current?.emit('select_faction', { gameId, faction, playerId: currentId });
   };
 
   const startGame = (gameId: string) => {
@@ -110,13 +118,16 @@ export function useSocket() {
   };
 
   const sendAction = (gameId: string, actionType: 'EXCHANGE' | 'ATTACK' | 'CLEAR_COMBAT', args?: any) => {
-    socketRef.current?.emit('game_action', { gameId, actionType, args });
+    const currentId = localStorage.getItem('boucle_player_id') || playerId || undefined;
+    socketRef.current?.emit('game_action', { gameId, actionType, args, playerId: currentId });
   };
 
   const sendRelocateCapital = (gameId: string, cityId: string, newBastionId: string) => {
+    const currentId = localStorage.getItem('boucle_player_id') || playerId || undefined;
     socketRef.current?.emit('relocate_capital', {
       gameId,
       args: { cityId, newBastionId },
+      playerId: currentId,
     });
   };
 

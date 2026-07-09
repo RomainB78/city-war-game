@@ -72,8 +72,8 @@ export function validateExchangeAction(
   if (state.activeFaction !== playerFaction) {
     return { valid: false, error: "It is not your turn" };
   }
-  if (state.combat) {
-    return { valid: false, error: 'Combat is currently in progress' };
+  if (state.combat && state.combat.isRelocatingCapital) {
+    return { valid: false, error: 'Capital relocation is currently in progress' };
   }
 
   const { sourceCityId, sourceBastionId, targetCityId, targetBastionId } = args;
@@ -136,6 +136,7 @@ export function performExchangeAction(
   }
 
   const newState = JSON.parse(JSON.stringify(state)) as GameState;
+  newState.combat = null;
   const { sourceCityId, sourceBastionId, targetCityId, targetBastionId } = args;
 
   const sourceCity = newState.cities[sourceCityId];
@@ -182,8 +183,8 @@ export function validateAttackAction(
   if (state.activeFaction !== playerFaction) {
     return { valid: false, error: "It is not your turn" };
   }
-  if (state.combat) {
-    return { valid: false, error: 'Combat is already in progress' };
+  if (state.combat && state.combat.isRelocatingCapital) {
+    return { valid: false, error: 'Capital relocation is currently in progress' };
   }
 
   const { sourceCityId, sourceBastionId, targetCityId, targetBastionId } = args;
@@ -254,6 +255,7 @@ export function initiateAttack(
   }
 
   const newState = JSON.parse(JSON.stringify(state)) as GameState;
+  newState.combat = null;
   const { sourceCityId, sourceBastionId, targetCityId, targetBastionId } = args;
 
   const sourceCity = newState.cities[sourceCityId];

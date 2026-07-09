@@ -150,9 +150,12 @@ export default function GameLobby({
 
   // 2. Faction Selection & Waiting inside the Lobby
   const isP1 = gameState?.players[0]?.id === playerId;
-  const canStart = gameState?.players.length === 2 && 
-                   gameState.players[0].faction && 
-                   gameState.players[1].faction;
+  const canStart = Boolean(
+    gameState &&
+    gameState.players.length >= 2 &&
+    gameState.players[0]?.faction &&
+    gameState.players[1]?.faction
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#090807] bg-grid relative overflow-hidden">
@@ -306,21 +309,15 @@ export default function GameLobby({
         {/* Start Game Action */}
         <div className="mt-8 border-t border-amber-900/20 pt-6 text-center">
           {canStart ? (
-            isP1 ? (
-              <button
-                onClick={handleStartGame}
-                className="w-full max-w-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-serif font-black text-xl py-3.5 px-8 rounded-lg transition-all shadow-[0_0_20px_rgba(217,119,6,0.3)] hover:shadow-[0_0_25px_rgba(217,119,6,0.5)] tracking-widest active:translate-y-[1px] glow-gold uppercase"
-              >
-                DÉCLARER LA GUERRE
-              </button>
-            ) : (
-              <div className="text-sm font-serif text-amber-500 animate-pulse">
-                Le Seigneur Hôte s'apprête à lancer les hostilités...
-              </div>
-            )
+            <button
+              onClick={handleStartGame}
+              className="w-full max-w-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-serif font-black text-xl py-3.5 px-8 rounded-lg transition-all shadow-[0_0_20px_rgba(217,119,6,0.3)] hover:shadow-[0_0_25px_rgba(217,119,6,0.5)] tracking-widest active:translate-y-[1px] glow-gold uppercase"
+            >
+              DÉCLARER LA GUERRE
+            </button>
           ) : (
             <div className="text-sm font-mono text-stone-500">
-              {gameState?.players.length === 2
+              {gameState && gameState.players.length >= 2
                 ? 'Les deux Seigneurs doivent choisir leur faction.'
                 : 'En attente de connexion du second Seigneur...'}
             </div>

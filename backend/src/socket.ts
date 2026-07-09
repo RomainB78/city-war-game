@@ -68,22 +68,33 @@ export function setupSocketHandlers(io: Server) {
 
         let player: Player | undefined;
 
-        // Try to reconnect if playerId is provided
+        // 1. Try to reconnect if playerId is provided
         if (playerId) {
           player = state.players.find(p => p.id === playerId);
-          if (player) {
-            player.socketId = socket.id;
-          }
         }
 
-        // If not reconnecting, join as new player
+        // 2. Try to match by current socketId
         if (!player) {
+          player = state.players.find(p => p.socketId === socket.id);
+        }
+
+        // 3. Try to match by exact name (reconnecting after refresh or lost playerId)
+        if (!player && playerName) {
+          player = state.players.find(
+            p => p.name.trim().toLowerCase() === playerName.trim().toLowerCase()
+          );
+        }
+
+        if (player) {
+          player.socketId = socket.id;
+        } else {
+          // New player joining
           if (state.status !== 'LOBBY') {
-            socket.emit('join_error', 'Game is already in progress.');
+            socket.emit('join_error', 'La partie a déjà commencé.');
             return;
           }
           if (state.players.length >= 2) {
-            socket.emit('join_error', 'Game room is full.');
+            socket.emit('join_error', 'La salle est déjà complète (2/2 joueurs).');
             return;
           }
 
@@ -109,18 +120,19 @@ export function setupSocketHandlers(io: Server) {
     });
 
     // Select faction
-    socket.on('select_faction', async ({ gameId, faction }: { gameId: string; faction: Faction }) => {
+    socket.on('select_faction', async ({ gameId, faction, playerId }: { gameId: string; faction: Faction; playerId?: string }) => {
       try {
         const state = await mapDbToGameState(gameId);
         if (!state) return;
 
-        const player = state.players.find(p => p.socketId === socket.id);
+        const player = state.players.find(p => (playerId && p.id === playerId) || p.socketId === socket.id);
         if (!player) return;
+        player.socketId = socket.id;
 
         // Check if other player already has this faction
         const factionTaken = state.players.some(p => p.id !== player.id && p.faction === faction);
         if (factionTaken) {
-          socket.emit('action_error', 'This faction is already selected by another player.');
+          socket.emit('action_error', 'Cette faction est déjà sélectionnée par l\'autre joueur.');
           return;
         }
 
@@ -167,19 +179,24 @@ export function setupSocketHandlers(io: Server) {
       gameId,
       actionType,
       args,
+      playerId,
     }: {
       gameId: string;
       actionType: 'EXCHANGE' | 'ATTACK' | 'CLEAR_COMBAT';
       args: any;
+      playerId?: string;
     }) => {
       try {
         let state = await mapDbToGameState(gameId);
         if (!state) return;
 
-        const player = state.players.find(p => p.socketId === socket.id);
-        if (!player) {
-          socket.emit('action_error', 'Player not found in game state.');
+        const player = state.players.find(p => (playerId && p.id === playerId) || p.socketId === socket.id);
+        if (!player && actionType !== 'CLEAR_COMBAT') {
+          socket.emit('action_error', 'Joueur non trouvé dans la partie.');
           return;
+        }
+        if (player) {
+          player.socketId = socket.id;
         }
 
         if (actionType === 'CLEAR_COMBAT') {
@@ -189,6 +206,8 @@ export function setupSocketHandlers(io: Server) {
           io.to(nextState.code).emit('state_updated', nextState);
           return;
         }
+
+        if (!player) return;
 
         const playerFaction = player.faction;
         if (!playerFaction) {
@@ -215,16 +234,19 @@ export function setupSocketHandlers(io: Server) {
     socket.on('relocate_capital', async ({
       gameId,
       args,
+      playerId,
     }: {
       gameId: string;
       args: { cityId: string; newBastionId: string };
+      playerId?: string;
     }) => {
       try {
         const state = await mapDbToGameState(gameId);
         if (!state) return;
 
-        const player = state.players.find(p => p.socketId === socket.id);
+        const player = state.players.find(p => (playerId && p.id === playerId) || p.socketId === socket.id);
         if (!player) return;
+        player.socketId = socket.id;
 
         const playerFaction = player.faction;
         if (!playerFaction) return;
