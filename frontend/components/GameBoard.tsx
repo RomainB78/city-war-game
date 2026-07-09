@@ -93,6 +93,11 @@ export default function GameBoard({
         targetCityId: targetCityId,
         targetBastionId: targetBastionId
       });
+      setSelectionMode('NONE');
+      setSelectedCityId(null);
+      setSelectedBastionId(null);
+      setTargetCityId(null);
+      setTargetBastionId(null);
     }
   };
 
@@ -104,6 +109,11 @@ export default function GameBoard({
         targetCityId: targetCityId,
         targetBastionId: targetBastionId
       });
+      setSelectionMode('NONE');
+      setSelectedCityId(null);
+      setSelectedBastionId(null);
+      setTargetCityId(null);
+      setTargetBastionId(null);
     }
   };
 

@@ -132,12 +132,10 @@ export async function dbSaveGame(state: GameState): Promise<void> {
     include: { bastions: true },
   });
 
-  // Sync cities and bastions
+  // Sync cities metadata
   for (const city of Object.values(state.cities)) {
     const dbCity = dbCities.find((c: any) => c.cityKey === city.cityKey);
-
     if (dbCity) {
-      // Update city ownership and capital
       dbOps.push(
         prisma.city.update({
           where: { id: dbCity.id },
@@ -147,45 +145,51 @@ export async function dbSaveGame(state: GameState): Promise<void> {
           },
         })
       );
+    }
+  }
 
-      // Update/Delete/Create bastions
-      const existingBastions = dbCity.bastions;
-      const currentBastionIds = new Set(city.bastions.map(b => b.id));
+  // Globally sync bastions across all cities to prevent ID unique constraint errors during EXCHANGE
+  const allExistingBastions = dbCities.flatMap((c: any) => c.bastions || []);
+  const allCurrentBastions: { bastion: any; cityId: string }[] = [];
 
-      // 1. Delete bastions that are no longer in state (destroyed)
-      const toDelete = existingBastions.filter((b: any) => !currentBastionIds.has(b.id));
-      if (toDelete.length > 0) {
-        dbOps.push(
-          prisma.bastion.deleteMany({
-            where: { id: { in: toDelete.map((b: any) => b.id) } },
-          })
-        );
-      }
-
-      // 2. Update existing or insert new bastions
+  for (const city of Object.values(state.cities)) {
+    const dbCity = dbCities.find((c: any) => c.cityKey === city.cityKey);
+    if (dbCity) {
       for (const b of city.bastions) {
-        const exist = existingBastions.find((eb: any) => eb.id === b.id);
-        if (exist) {
-          dbOps.push(
-            prisma.bastion.update({
-              where: { id: b.id },
-              data: { soldiers: b.soldiers },
-            })
-          );
-        } else {
-          dbOps.push(
-            prisma.bastion.create({
-              data: {
-                id: b.id,
-                soldiers: b.soldiers,
-                initialSoldiers: b.initialSoldiers,
-                cityId: dbCity.id,
-              },
-            })
-          );
-        }
+        allCurrentBastions.push({ bastion: b, cityId: dbCity.id });
       }
     }
+  }
+
+  const currentBastionIds = new Set(allCurrentBastions.map(x => x.bastion.id));
+  const toDeleteIds = allExistingBastions
+    .filter((eb: any) => !currentBastionIds.has(eb.id))
+    .map((eb: any) => eb.id);
+
+  if (toDeleteIds.length > 0) {
+    dbOps.push(
+      prisma.bastion.deleteMany({
+        where: { id: { in: toDeleteIds } },
+      })
+    );
+  }
+
+  for (const { bastion: b, cityId } of allCurrentBastions) {
+    dbOps.push(
+      prisma.bastion.upsert({
+        where: { id: b.id },
+        update: {
+          soldiers: b.soldiers,
+          cityId: cityId,
+        },
+        create: {
+          id: b.id,
+          soldiers: b.soldiers,
+          initialSoldiers: b.initialSoldiers,
+          cityId: cityId,
+        },
+      })
+    );
   }
 
   // Sync players (they might change factions in lobby)
