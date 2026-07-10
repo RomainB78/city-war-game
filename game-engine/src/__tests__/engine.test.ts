@@ -1,4 +1,4 @@
-import { createInitialState, performExchangeAction, initiateAttack, relocateCapital } from '../engine';
+import { createInitialState, performExchangeAction, initiateAttack, relocateCapital, validateAttackAction } from '../engine';
 import { Player } from 'shared';
 
 describe('Game Engine', () => {
@@ -206,5 +206,54 @@ describe('Game Engine', () => {
     expect(nextState.cities['port_marly'].bastions.length).toBe(1);
     expect(nextState.cities['port_marly'].bastions[0].id).toBe('g1_croissy_bastion_2');
     expect(nextState.cities['port_marly'].bastions[0].soldiers).toBe(3022);
+  });
+
+  it('should allow targeting and attacking a city whose capital has already been destroyed if its bastion survived', () => {
+    const state = createInitialState('g1', 'CODE123', players);
+    state.status = 'PLAYING';
+    state.activeFaction = 'CHATOU';
+
+    const portMarly = state.cities['port_marly'];
+    portMarly.bastions = [{
+      id: 'pm_last_bastion',
+      soldiers: 5000,
+      initialSoldiers: 5000,
+    }];
+    portMarly.capitalId = 'pm_last_bastion';
+
+    // 1st Attack: destroys capital status, but PM bastion survives combat
+    const afterFirstAttack = initiateAttack(state, 'CHATOU', {
+      sourceCityId: 'croissy',
+      sourceBastionId: state.cities['croissy'].bastions[1].id,
+      targetCityId: 'port_marly',
+      targetBastionId: 'pm_last_bastion',
+    });
+
+    const pmAfterFirst = afterFirstAttack.cities['port_marly'];
+    expect(pmAfterFirst.capitalId).toBeNull(); // Capital destroyed
+    expect(pmAfterFirst.faction).toBe('VILLE_IMPERIALE'); // Still belongs to VILLE_IMPERIALE
+    expect(pmAfterFirst.bastions.length).toBe(1); // Bastion survived
+    expect(pmAfterFirst.bastions[0].soldiers).toBeGreaterThan(0);
+
+    // Simulate CHATOU's next turn
+    afterFirstAttack.activeFaction = 'CHATOU';
+
+    // Verify it remains a valid target for a subsequent attack
+    const validation = validateAttackAction(afterFirstAttack, 'CHATOU', {
+      sourceCityId: 'croissy',
+      sourceBastionId: afterFirstAttack.cities['croissy'].bastions[1].id,
+      targetCityId: 'port_marly',
+      targetBastionId: 'pm_last_bastion',
+    });
+    expect(validation.valid).toBe(true);
+
+    // 2nd Attack executes cleanly against the uncontrolled city
+    const afterSecondAttack = initiateAttack(afterFirstAttack, 'CHATOU', {
+      sourceCityId: 'croissy',
+      sourceBastionId: afterFirstAttack.cities['croissy'].bastions[1].id,
+      targetCityId: 'port_marly',
+      targetBastionId: 'pm_last_bastion',
+    });
+    expect(afterSecondAttack.cities['port_marly']).toBeDefined();
   });
 });

@@ -144,8 +144,8 @@ export default function InteractiveMap({
 
     if (isUncontrolled) {
       fillColor = '#78716c';
-      strokeColor = isSelected ? '#f59e0b' : '#a8a29e';
-      fillOpacity = isSelected ? 0.35 : 0.12;
+      strokeColor = isSelected ? '#f59e0b' : isTarget ? (city.faction === 'CHATOU' ? '#3b82f6' : '#ef4444') : '#a8a29e';
+      fillOpacity = isSelected ? 0.35 : isTarget ? 0.28 : 0.12;
     } else if (city.faction === 'CHATOU') {
       fillColor = '#3b82f6';
       strokeColor = isSelected ? '#60a5fa' : isTarget ? '#3b82f6' : 'rgba(59, 130, 246, 0.45)';
