@@ -236,8 +236,8 @@ export function validateAttackAction(
     return { valid: false, error: 'Attacking bastion must contain at least 10 soldiers' };
   }
 
-  if (targetBastion.soldiers <= 0) {
-    return { valid: false, error: 'Target bastion has no soldiers' };
+  if (targetBastion.soldiers < 0) {
+    return { valid: false, error: 'Target bastion has invalid soldiers' };
   }
 
   return { valid: true };
@@ -437,38 +437,40 @@ export function resolveCombat(state: GameState): GameState {
   combat.defenderRemainingSoldiers = result.defenderRemaining;
   combat.winnerFaction = result.winner === 'ATTACKER' ? attackerCity.faction : defenderCity.faction;
 
-  // Apply updates to the bastions
-  attackerBastion.soldiers = result.attackerRemaining;
-  defenderBastion.soldiers = result.defenderRemaining;
+  // Apply updates to the bastions (Rule 1: bastions are never removed, just remain at 0 soldiers)
+  attackerBastion.soldiers = Math.max(0, result.attackerRemaining);
+  defenderBastion.soldiers = Math.max(0, result.defenderRemaining);
 
-  // Check if attacker is destroyed
+  // Check if attacker bastion reached 0
   if (attackerBastion.soldiers <= 0) {
-    attackerCity.bastions = attackerCity.bastions.filter(b => b.id !== attackerBastion.id);
+    attackerBastion.soldiers = 0;
     // If the attacker bastion held the capital of attackerCity, that capital is destroyed!
     if (attackerCity.capitalId === attackerBastion.id) {
       attackerCity.capitalId = null;
     }
   }
 
-  // Check if defender is destroyed
+  // Check if defender bastion reached 0
   if (defenderBastion.soldiers <= 0) {
-    defenderCity.bastions = defenderCity.bastions.filter(b => b.id !== defenderBastion.id);
-    // If it was capital, remove it
+    defenderBastion.soldiers = 0;
+    // If it was capital, remove capital status
     if (defenderCity.capitalId === defenderBastion.id) {
       defenderCity.capitalId = null;
     }
+  }
 
-    // Check if the defender city has lost all of its bastions (meaning it is conquered!)
-    if (defenderCity.bastions.length === 0) {
-      defenderCity.faction = attackerCity.faction;
-      // The victorious attacker bastion moves to the conquered city (only if it survived)
-      if (attackerBastion.soldiers > 0) {
-        attackerCity.bastions = attackerCity.bastions.filter(b => b.id !== attackerBastion.id);
-        defenderCity.bastions.push(attackerBastion);
-        // Once a capital is destroyed, the city can never recreate a capital. Conquered cities remain capital-less.
-        defenderCity.capitalId = null;
-      }
+  // Rule 4: A city is captured when all of its bastions have 0 soldiers!
+  const isDefenderConquered = defenderCity.bastions.every(b => b.soldiers === 0);
+  if (isDefenderConquered) {
+    defenderCity.faction = attackerCity.faction;
+    // All bastions in defenderCity become owned by attackerCity.faction
+    // Each bastion keeps its current number of soldiers.
+    // If the victorious attackerBastion survived (> 0), it moves to the conquered city.
+    if (attackerBastion.soldiers > 0) {
+      attackerCity.bastions = attackerCity.bastions.filter(b => b.id !== attackerBastion.id);
+      defenderCity.bastions.push(attackerBastion);
     }
+    defenderCity.capitalId = null;
   }
 
   // Add history log

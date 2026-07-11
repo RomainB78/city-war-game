@@ -262,7 +262,12 @@ export default function GameBoard({
                           <div className="flex items-center gap-3">
                             <span className="text-[10px] font-mono text-stone-500">#{index + 1}</span>
                             <div>
-                              <span className="text-stone-300 font-medium font-mono text-sm">{bastion.soldiers} <span className="text-[10px] text-stone-500">hommes</span></span>
+                              <span className="text-stone-300 font-medium font-mono text-sm">
+                                {bastion.soldiers} <span className="text-[10px] text-stone-500">hommes</span>
+                                {bastion.soldiers === 0 && (
+                                  <span className="text-[10px] font-mono uppercase ml-2 text-stone-500 bg-stone-900 px-1.5 py-0.5 rounded border border-stone-800">Inactif</span>
+                                )}
+                              </span>
                               <span className="text-[9px] font-mono text-stone-600 block">Initial: {bastion.initialSoldiers}</span>
                             </div>
                           </div>
@@ -349,7 +354,10 @@ export default function GameBoard({
                               : 'bg-stone-950/40 border-stone-900 hover:border-amber-900/20 text-stone-400'
                           }`}
                         >
-                          <span>Bastion #{idx + 1} ({b.soldiers} soldats)</span>
+                          <span>
+                            Bastion #{idx + 1} ({b.soldiers} soldats)
+                            {b.soldiers === 0 && <span className="ml-1.5 text-[9px] text-stone-500">[Inactif]</span>}
+                          </span>
                           {isCapital && (
                             <span className="text-[9px] uppercase font-mono text-amber-500 flex items-center gap-0.5"><Crown size={10} className="fill-amber-500" /> Capitale</span>
                           )}

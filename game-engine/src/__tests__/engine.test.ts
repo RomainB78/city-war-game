@@ -203,9 +203,9 @@ describe('Game Engine', () => {
 
     expect(nextState.cities['port_marly'].capitalId).toBeNull();
     expect(nextState.cities['port_marly'].faction).toBe('CHATOU');
-    expect(nextState.cities['port_marly'].bastions.length).toBe(1);
-    expect(nextState.cities['port_marly'].bastions[0].id).toBe('g1_croissy_bastion_2');
-    expect(nextState.cities['port_marly'].bastions[0].soldiers).toBe(3022);
+    expect(nextState.cities['port_marly'].bastions.length).toBe(2);
+    expect(nextState.cities['port_marly'].bastions.find(b => b.id === 'pm_last_bastion')?.soldiers).toBe(0);
+    expect(nextState.cities['port_marly'].bastions.find(b => b.id === 'g1_croissy_bastion_2')?.soldiers).toBe(3022);
   });
 
   it('should allow targeting and attacking a city whose capital has already been destroyed if its bastion survived', () => {
@@ -255,5 +255,29 @@ describe('Game Engine', () => {
       targetBastionId: 'pm_last_bastion',
     });
     expect(afterSecondAttack.cities['port_marly']).toBeDefined();
+  });
+
+  it('should allow bastions with 0 soldiers to be exchanged between allied neighboring cities', () => {
+    const state = createInitialState('g1', 'CODE123', players);
+    state.status = 'PLAYING';
+    state.activeFaction = 'CHATOU';
+
+    // Set one non-capital bastion in croissy to 0 soldiers
+    const croissy = state.cities['croissy'];
+    const zeroBastion = croissy.bastions[1];
+    zeroBastion.soldiers = 0;
+
+    const targetCity = state.cities['chatou'];
+    const targetBastion = targetCity.bastions[1];
+
+    const nextState = performExchangeAction(state, 'CHATOU', {
+      sourceCityId: 'croissy',
+      sourceBastionId: zeroBastion.id,
+      targetCityId: 'chatou',
+      targetBastionId: targetBastion.id,
+    });
+
+    expect(nextState.cities['chatou'].bastions.some(b => b.id === zeroBastion.id && b.soldiers === 0)).toBe(true);
+    expect(nextState.cities['croissy'].bastions.some(b => b.id === targetBastion.id)).toBe(true);
   });
 });
