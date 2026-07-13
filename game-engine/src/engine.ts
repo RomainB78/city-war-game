@@ -105,14 +105,6 @@ export function validateExchangeAction(
     return { valid: false, error: 'Source or target bastion not found' };
   }
 
-  // Uncontrolled cities check
-  if (sourceCity.capitalId === null) {
-    return { valid: false, error: 'Uncontrolled source city cannot participate in exchanges' };
-  }
-  if (targetCity.capitalId === null) {
-    return { valid: false, error: 'Uncontrolled target city cannot participate in exchanges' };
-  }
-
   // Capital check
   if (sourceCity.capitalId === sourceBastionId) {
     return { valid: false, error: 'Cannot exchange the capital bastion' };

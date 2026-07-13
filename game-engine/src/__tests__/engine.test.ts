@@ -280,4 +280,28 @@ describe('Game Engine', () => {
     expect(nextState.cities['chatou'].bastions.some(b => b.id === zeroBastion.id && b.soldiers === 0)).toBe(true);
     expect(nextState.cities['croissy'].bastions.some(b => b.id === targetBastion.id)).toBe(true);
   });
+
+  it('should allow uncontrolled cities (capitalId === null) to participate in bastion exchanges with allied neighbors', () => {
+    const state = createInitialState('g1', 'CODE123', players);
+    state.status = 'PLAYING';
+    state.activeFaction = 'CHATOU';
+
+    // Make croissy uncontrolled (capitalId = null)
+    const croissy = state.cities['croissy'];
+    croissy.capitalId = null;
+    const sourceBastion = croissy.bastions[0];
+
+    const chatou = state.cities['chatou'];
+    const targetBastion = chatou.bastions[1]; // non-capital bastion in chatou
+
+    const nextState = performExchangeAction(state, 'CHATOU', {
+      sourceCityId: 'croissy',
+      sourceBastionId: sourceBastion.id,
+      targetCityId: 'chatou',
+      targetBastionId: targetBastion.id,
+    });
+
+    expect(nextState.cities['chatou'].bastions.some(b => b.id === sourceBastion.id)).toBe(true);
+    expect(nextState.cities['croissy'].bastions.some(b => b.id === targetBastion.id)).toBe(true);
+  });
 });

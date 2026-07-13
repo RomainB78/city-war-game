@@ -65,11 +65,10 @@ export default function GameBoard({
     const neighbors = ADJACENCY_MAP[selectedCityId] || [];
 
     if (selectionMode === 'EXCHANGE') {
-      // Allied neighbors that have capitals or not, wait.
-      // Uncontrolled cities cannot participate in exchanges
+      // Allied neighbors (including uncontrolled cities without a capital) can participate in exchanges
       return neighbors.filter(nId => {
         const c = gameState.cities[nId];
-        return c && c.faction === myFaction && c.capitalId !== null;
+        return c && c.faction === myFaction;
       });
     } else if (selectionMode === 'ATTACK') {
       // Enemy neighbors (can be uncontrolled too, they defend automatically)
@@ -238,7 +237,7 @@ export default function GameBoard({
                     {selectedCity.bastions.map((bastion, index) => {
                       const isCapital = selectedCity.capitalId === bastion.id;
                       const isSelected = selectedBastionId === bastion.id;
-                      const canSelect = !isCapital && selectedCity.faction === myFaction && isMyTurn && selectedCity.capitalId !== null;
+                      const canSelect = !isCapital && selectedCity.faction === myFaction && isMyTurn;
 
                       return (
                         <button
@@ -286,7 +285,7 @@ export default function GameBoard({
               </div>
 
               {/* Actions panel */}
-              {isMyTurn && selectedCity.faction === myFaction && selectedCity.capitalId !== null && selectionMode === 'NONE' && (
+              {isMyTurn && selectedCity.faction === myFaction && selectionMode === 'NONE' && (
                 <div className="space-y-3">
                   <span className="text-[10px] tracking-wider text-stone-500 font-mono block uppercase">Ordres de Commandement</span>
                   
@@ -300,16 +299,18 @@ export default function GameBoard({
                     </button>
                     <button
                       onClick={() => setSelectionMode('ATTACK')}
-                      disabled={!selectedBastionId || selectedCity.bastions.length < 2 || (selectedCity.bastions.find(b => b.id === selectedBastionId)?.soldiers || 0) < 10}
-                      title={selectedCity.bastions.length < 2 ? "Requiert au moins 2 bastions dans la ville" : ""}
+                      disabled={selectedCity.capitalId === null || !selectedBastionId || selectedCity.bastions.length < 2 || (selectedCity.bastions.find(b => b.id === selectedBastionId)?.soldiers || 0) < 10}
+                      title={selectedCity.capitalId === null ? "Une ville sans capitale ne peut pas attaquer" : selectedCity.bastions.length < 2 ? "Requiert au moins 2 bastions dans la ville" : ""}
                       className="bg-stone-900 hover:bg-stone-850 disabled:bg-stone-950 border border-amber-950/30 text-amber-500 disabled:text-stone-700 py-3 rounded-lg text-sm font-semibold tracking-wider transition-all"
                     >
                       ATTAQUER
                     </button>
                   </div>
-                  {selectedCity.bastions.length < 2 && (
+                  {selectedCity.capitalId === null ? (
+                    <p className="text-[9px] text-amber-500/80 font-mono block text-center mt-1">Ville sans capitale : seuls les échanges de bastions sont autorisés.</p>
+                  ) : selectedCity.bastions.length < 2 ? (
                     <p className="text-[9px] text-red-500/80 font-mono block text-center mt-1">L'attaque requiert au moins 2 bastions dans cette ville.</p>
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>
